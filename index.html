@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>CodeMash 2018 Debrief</title>
+    <link rel="stylesheet" type="text/css" href="build/build.css">
+  </head>
+  <body>
+    <article class="deck">
+      <section class="intro">
+        <div class="box">
+          <h1>CodeMash 2018 Debrief</h1>
+          <p style="margin-bottom:0;">Jan 9–12</p>
+          <p>Sandusky, Ohio</p>
+        </div>
+      </section>
+      <section>
+        <h2>JSON Web Tokens Suck</h2>
+        <p>
+          A talk by
+          <a href="https://twitter.com/rdegges">Randall Degges</a>
+        </p><img src="images/randall-degges.jpg" style="height:60%;">
+      </section>
+      <section><img class="portrait" src="images/stop-using-jwts.jpg"></section>
+      <section>
+        <h2>What are JWTs?</h2><img src="images/what-are-jwts.png" style="width:90%;">
+      </section>
+      <section>
+        <h2 class="bullet">What Do JWTs Actually Do?</h2>
+        <p class="large bullet">Prove that some JSON data can be trusted</p>
+      </section>
+      <section>
+        <h2 class="bullet">How Do People Typically Use JWTs?</h2>
+        <p class="large bullet">As identity proof</p>
+      </section>
+      <section>
+        <h2 class="bullet">What does this look like?</h2>
+        <ul>
+          <li class="bullet">User sends credentials to website to login</li>
+          <li class="bullet">Website validates credentials, generates JWT</li>
+          <li class="bullet">Website sends response to browser containing JWT</li>
+          <li class="bullet">Browser then stores JWT in localStorage</li>
+          <li class="bullet">Browser pulls JWT out of localStorage and sends it to website for subsequent requests</li>
+        </ul>
+      </section>
+      <section>
+        <p class="bullet">Local storage?</p>
+        <p class="bullet">Secret Session Token?</p>
+        <p class="bullet" style="height:50%;"><img src="images/explosion.jpg" style="height:100%;"></p>
+      </section>
+      <section><img class="landscape" src="images/coding-horror-cookies.png"></section>
+      <section>
+        <h2>"No one would do that"</h2><img class="landscape" src="images/auth0-where-to-store-token.png">
+      </section>
+      <section>
+        <h2>Why is localStorage dangerous?</h2><img class="landscape" src="images/xss.png">
+      </section>
+      <section>
+        <h2 class="bullet">"My JS framework protects me from XSS"</h2>
+        <ul class="bullet">
+          <li>
+            Angular →
+            <code>$sce.trustAsHtml(userInput);</code>
+          </li>
+          <li>
+            React →
+            <code>&lt;span dangerouslySetInnerHTML={userInput} /&gt;</code>
+          </li>
+          <li>Server side → rendering user input into the page</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Even if your code has no XSS vulnerabilities...</h2>
+      </section>
+      <section>
+        <h2>Do you include any of the following scripts?</h2>
+        <ul>
+          <li>Google Analytics?</li>
+          <li>New Relic?</li>
+          <li>Chat agent?</li>
+          <li>Ad network?</li>
+          <li>Libraries from a CDN?</li>
+          <li>Anything from a CDN?</li>
+          <li>Other 3rd party integrations?</li>
+        </ul>
+      </section>
+      <section>
+        <h2>"I'll just use Subresource Integrity"</h2>
+        <pre><code class="language-html bullet">&lt;script src="https://example.com/framework-1.2.3.js"
+  integrity="sha384-oqVuAfXRK...stuff...PzQho1wx4JwY8wC"&gt;
+&lt;/script&gt;</code></pre>
+        <div class="bullet">
+          <h4 style="text-align:center;">Except your 3rd party integration looks more like:</h4>
+          <pre><code class="language-html">&lt;script src="https://example.com/constantly-changing-code.js"&gt;
+&lt;/script&gt;
+</code></pre>
+        </div>
+      </section>
+      <section>
+        <h2 class="bullet">To Recap</h2>
+        <p class="bullet">
+          Secret Session Token
+          <span class="bullet">+ JavaScript</span>
+        </p>
+        <p class="bullet" style="height:50%;"><img src="images/explosion.jpg" style="height:100%;"></p>
+      </section>
+      <section>
+        <h2>Where should we store our Secret Session Token?</h2>
+      </section>
+      <section class="cookies"></section>
+      <section class="cookies">
+        <div class="box">
+          <ul>
+            <li class="bullet">You can put JWTs in them</li>
+            <li class="bullet">Or you could just, you know, use...</li>
+          </ul>
+        </div>
+      </section>
+      <section class="rainbows">
+        <div class="box">
+          <h2>Session Cookies</h2>
+        </div>
+      </section>
+      <section>
+        <h2>Cookie Security Problems</h2>
+        <ul>
+          <li>Not using <code>HttpOnly</code></li>
+          <li>CSRF</li>
+          <li>Cross-subdomain shenanigans</li>
+          <li><code>HttpOnly</code> cookies don't prevent XSS</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Most Developers Don't Understand CSRF</h2>
+        <ul>
+          <li>"Actions are only accessible via POST"</li>
+          <li>"My site requires AuthN"</li>
+          <li>"Our controllers only expect JSON"</li>
+        </ul>
+      </section>
+      <section>
+        <h2>That's OK. Your framework solves it for you.</h2>
+        <pre class="bullet"><code class="language-javascript">services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");</code></pre>
+        <p class="bullet">Also the new <code>SameSite</code> option for <code>Set-Cookie</code> prevents it</p>
+        <p class="bullet">Also CSRF isn't even in the OWASP 2017 top 10</p>
+      </section>
+      <section>
+        <h2>Cross-subdomain shenanigans</h2>
+        <p><code>evil.example.com</code> sets a cookie for <code>.example.com</code></p>
+        <p class="bullet">Evil cookie gets served to <code>www.example.com</code></p>
+        <p class="bullet">Session Fixation Attack</p>
+        <p class="bullet serious">All modern session cookie implementations<br/>use cryptographically signed cookies</p>
+      </section>
+      <section>
+        <h2><code>HttpOnly</code> cookies don't prevent XSS</h2>
+        <p>Requests made by your browser include <code>HttpOnly</code> cookies</p>
+        <p>If an attacker can run JavaScript in your browser, they can make requests</p>
+        <p style="height:30%;"><img src="images/checkmate.jpg" style="height:100%;"></p>
+        <h3>/thread</h3>
+      </section>
+      <section>
+        <h2>Except there's a big difference between:</h2>
+        <ol class="bullet">
+          <li>Attacker can perform attack <strong>while victim has their browser open</strong></li>
+          <li>Attacker can perform attack <strong>at their leisure for hours if not days or weeks</strong></li>
+        </ol>
+        <div class="bullet">
+          <h2>And:</h2>
+          <ol>
+            <li>The small amount of code needed to exfiltrate secret session token</li>
+            <li>The potentially large amount of code needed to perform the attack</li>
+          </ol>
+        </div>
+      </section>
+      <section>
+        <h2>Code size matters for exploitability</h2>
+        <ul>
+          <li class="bullet"><code>Content-Security-Policy</code> header</li>
+          <li class="bullet">Code reviews</li>
+        </ul>
+      </section>
+      <section>
+        <h2><code>HttpOnly</code> cookies make XSS a lot harder</h2>
+      </section>
+      <section>
+        <h2><code>HttpOnly</code> Cookies > localStorage</h2>
+        <p>(For secret sesssion tokens)</p>
+      </section>
+      <section>
+        <h2>Session Cookies vs JWTs</h2>
+        <ul>
+          <li class="bullet">
+            "JWTs are easy to use"
+            <span class="bullet">→ so are session cookies</span>
+          </li>
+          <li class="bullet">
+            "JWTs have built-in expiration"
+            <span class="bullet">→ so do session cookies</span>
+          </li>
+          <li class="bullet">
+            "JWTs are cryptographically signed"
+            <span class="bullet">→ so are session cookies</span>
+          </li>
+          <li class="bullet">
+            "JWTs are more secure"
+            <span class="bullet">→ the spec is literally insecure</span>
+          </li>
+          <li class="bullet">
+            "JWTs are sent only when needed"
+            <span class="bullet">→ they're so big it doesn't matter</span>
+          </li>
+          <li class="bullet">
+            "JWTs are stateless"
+            <span class="bullet">→ until you want to invalidate sessions</span>
+          </li>
+          <li class="bullet">
+            "JWTs don't need cookie consent"
+            <span class="bullet">→ any tracking requires consent</span>
+          </li>
+          <li class="bullet">
+            "JWTs prevent CSRF"
+            <span class="bullet">→ no</span>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <h2>Session Cookies vs JWTs</h2><img class="landscape" src="images/jwt-flowchart.png">
+        <p>By <a href="https://twitter.com/joepie91">@joepie91</a></p>
+      </section>
+      <section>
+        <h2>Don't use JWTs to re-invent sessions</h2>
+      </section>
+      <section>
+        <h2 class="bullet">What are JWTs good for?</h2>
+        <ol>
+          <li class="bullet">Short-lived tokens</li>
+          <li class="bullet">That are... <strong>single-use</strong></li>
+        </ol>
+      </section>
+      <section>
+        <h2>Good uses of JWTs</h2>
+        <ul>
+          <li class="bullet">Password reset token</li>
+          <li class="bullet">Token to download file</li>
+          <li class="bullet">Token to trade for session in distributed system</li>
+        </ul>
+      </section>
+      <section>
+        <h2>What if you're an OpenID Connect consumer?</h2>
+        <p>In Coffee we delegate auth to Azure AD</p>
+        <p>I asked Randall about this after his talk</p>
+        <ul class="bullet">
+          <li class="bullet">Store JWT in cookie</li>
+          <li class="bullet">Use <code>authorization_code</code> flow</li>
+        </ul>
+      </section>
+      <section>
+        <p class="bullet">Slides at: <a href="http://www.codetinkerer.com/presentation-jwts-suck/">codetinkerer.com/presentation-jwts-suck/</a></p>
+        <h2 class="bullet">Questions?</h2>
+      </section>
+    </article>
+    <script src="build/build.js"></script>
+  </body>
+</html>
